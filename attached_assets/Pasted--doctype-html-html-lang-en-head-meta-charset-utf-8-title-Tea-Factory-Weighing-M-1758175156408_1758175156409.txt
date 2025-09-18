@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tea Factory Weighing Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --panel:#111826cc;
+      --panel-solid:#111826;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --primary:#84cc16;
+      --accent:#22d3ee;
+      --danger:#ef4444;
+      --warn:#f59e0b;
+      --ok:#10b981;
+      --card: rgba(255,255,255,0.06);
+      --glass: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 10px 30px rgba(0,0,0,0.3);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html,body { height:100%; }
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 20% -10%, #1c2541 0%, transparent 60%),
+                  radial-gradient(900px 600px at 120% 20%, #233554 0%, transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 22px; position:sticky; top:0; z-index:20; backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(17,24,38,0.75), rgba(17,24,38,0.35));
+      border-bottom:1px solid var(--border);
+    }
+    .brand{
+      display:flex; gap:10px; align-items:center; font-weight:800; letter-spacing:0.5px;
+    }
+    .brand .dot{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--primary)); box-shadow:0 0 18px var(--accent);}
+    nav{display:flex; gap:8px;}
+    nav button{
+      background:var(--card); color:var(--text); border:1px solid var(--border);
+      padding:10px 14px; border-radius:10px; cursor:pointer; transition:0.2s transform, 0.2s background;
+    }
+    nav button.active{ background: linear-gradient(135deg, rgba(34,211,238,0.2), rgba(132,204,22,0.2)); border-color: transparent; }
+    nav button:hover{ transform: translateY(-1px); }
+
+    .container{ padding:22px; max-width:1200px; margin:0 auto; }
+
+    .grid{ display:grid; grid-template-columns: 1.2fr 1fr; gap:18px; }
+    .card{
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px;
+    }
+    .card h3{ margin:0 0 12px 0; font-weight:700; letter-spacing:0.4px; }
+    .muted{ color: var(--muted); font-size: 12px; }
+    .row{ display:flex; gap:12px; }
+    .col{ flex:1; }
+
+    input, select {
+      width:100%; padding:12px 12px; background: rgba(255,255,255,0.05);
+      border:1px solid var(--border); border-radius:12px; color:var(--text); outline:none;
+    }
+    input:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34,211,238,0.18); }
+    label{ display:block; margin:6px 4px; font-size:13px; color: var(--muted); }
+    .btn {
+      padding:11px 14px; border-radius:10px; border:1px solid var(--border);
+      background:var(--panel); color:var(--text); cursor:pointer; transition:0.2s;
+    }
+    .btn.primary { background: linear-gradient(135deg, rgba(34,211,238,0.25), rgba(132,204,22,0.25)); border-color: transparent; }
+    .btn.warn { background: linear-gradient(135deg, rgba(245,158,11,0.25), rgba(245,158,11,0.1)); border-color:transparent; }
+    .btn.danger { background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.1)); border-color:transparent; }
+    .btn:disabled { opacity:0.6; cursor:not-allowed; }
+    .btn:hover{ transform: translateY(-1px); }
+
+    .weight-panel{
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      padding:16px; border-radius:12px; background: linear-gradient(135deg, rgba(34,211,238,0.15), rgba(132,204,22,0.12));
+      border:1px solid var(--border);
+    }
+    .big-weight{ font-size:44px; font-weight:800; letter-spacing:1.5px; }
+    .pill{ padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid var(--border); background:rgba(255,255,255,0.06); }
+    .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
+    .dot.ok { background: var(--ok); box-shadow: 0 0 14px var(--ok); }
+    .dot.fail { background: var(--danger); box-shadow: 0 0 14px var(--danger); }
+    .dot.warn { background: var(--warn); box-shadow: 0 0 14px var(--warn); }
+
+    table{ width:100%; border-collapse: collapse; }
+    th, td { padding:10px 8px; border-bottom:1px solid var(--border); text-align:left; }
+    th { color: var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:0.6px; }
+
+    .right{ text-align:right; }
+    .center{ text-align:center; }
+
+    .toast{
+      position:fixed; bottom:20px; right:20px; z-index:50; min-width:260px;
+      background: var(--panel-solid); color: var(--text); padding:12px 14px; border-radius:12px; box-shadow: var(--shadow); border:1px solid var(--border);
+    }
+
+    .footer-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
+
+    .switch {
+      display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
+    }
+    .switch input { display:none; }
+    .switch .track{
+      width:44px;height:24px;border-radius:999px;background:rgba(255,255,255,0.15);position:relative;border:1px solid var(--border);
+      transition:0.2s;
+    }
+    .switch .thumb{
+      position:absolute; top:50%; left:2px; transform: translate(0, -50%);
+      width:20px; height:20px; border-radius:50%; background:white; transition:0.2s;
+    }
+    .switch input:checked + .track { background: linear-gradient(135deg, var(--accent), var(--primary)); border-color:transparent; }
+    .switch input:checked + .track .thumb { transform: translate(20px, -50%); }
+
+    .hidden{ display:none !important; }
+
+    /* Modal */
+    .modal{ position: fixed; inset:0; display:none; align-items:center; justify-content:center; background: rgba(0,0,0,0.5); z-index:60; }
+    .modal.show { display:flex; }
+    .modal .dialog{ background: var(--panel-solid); border:1px solid var(--border); border-radius: 16px; width: 520px; max-width: 92vw; padding:16px 16px 10px; box-shadow: var(--shadow); }
+    .modal .dialog h3{ margin: 4px 6px 12px; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="dot"></span>
+    <div>
+      Tea Factory Weighing
+      <div class="muted" style="font-size:11px">Lorry Queue & Leaf Tag Weighments</div>
+    </div>
+  </div>
+  <nav>
+    <button id="navQueue" class="active">Queue</button>
+    <button id="navWeigh">Weigh</button>
+    <button id="navSettings">Settings</button>
+  </nav>
+</header>
+
+<div class="container">
+  <!-- Queue View -->
+  <div id="viewQueue">
+    <div class="grid">
+      <div class="card">
+        <h3>Add Lorry</h3>
+        <div class="row">
+          <div class="col">
+            <label>Lorry Number</label>
+            <input id="inLorryNumber" list="dl-lorry" placeholder="e.g., AB-1234">
+            <datalist id="dl-lorry"></datalist>
+          </div>
+          <div class="col">
+            <label>Line</label>
+            <input id="inEstate" list="dl-estate" placeholder="e.g., Line A">
+            <datalist id="dl-estate"></datalist>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label>Line Manager</label>
+            <input id="inDriverName" list="dl-driver" placeholder="Manager name">
+            <datalist id="dl-driver"></datalist>
+          </div>
+          <div class="col">
+            <label>Phone</label>
+            <input id="inDriverPhone" placeholder="+94 7X XXX XXXX">
+          </div>
+        </div>
+        <div class="footer-actions">
+          <button class="btn" id="btnClearNew">Clear</button>
+          <button class="btn primary" id="btnAddLorry">Add to Queue</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Scale</h3>
+        <div class="weight-panel">
+          <div>
+            <div class="muted">Connection</div>
+            <div id="connPill" class="pill"><span id="connDot" class="dot warn"></span><span id="connText">Connecting...</span></div>
+          </div>
+          <div class="center">
+            <div class="muted">Last Tag</div>
+            <div style="font-weight:700; font-size:20px" id="lastTag">—</div>
+          </div>
+          <div class="right">
+            <div class="muted">Last Stable</div>
+            <div class="big-weight" id="lastStable">— kg</div>
+            <div class="muted" id="lastAt">—</div>
+          </div>
+        </div>
+        <div class="muted" style="margin-top:8px" id="scaleInfo"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <h3>Queue & Active</h3>
+      <div class="muted">Action: Start a lorry to begin weighing sacks.</div>
+      <table style="margin-top:10px">
+        <thead>
+        <tr>
+          <th>Status</th>
+          <th>Lorry</th>
+          <th>Line</th>
+          <th>Line Manager</th>
+          <th>Arrived</th>
+          <th>Totals</th>
+          <th class="right">Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tblQueue"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Weigh View -->
+  <div id="viewWeigh" class="hidden">
+    <div class="card">
+      <div class="row" style="align-items:center; justify-content:space-between;">
+        <div>
+          <h3 style="margin-bottom:2px">Weighing</h3>
+          <div class="muted" id="weighLorryDetails">No lorry selected</div>
+        </div>
+        <div>
+          <label class="switch" title="Auto-use stable weight to save">
+            <input type="checkbox" id="toggleAutoUse">
+            <div class="track"><div class="thumb"></div></div>
+            <span>Auto-use stable</span>
+          </label>
+          <span style="display:inline-block; width:16px;"></span>
+          <label class="switch" title="Enable manual gross entry instead of using scale">
+            <input type="checkbox" id="toggleManualGross">
+            <div class="track"><div class="thumb"></div></div>
+            <span>Manual gross</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="weight-panel" style="margin-top:10px">
+        <div>
+          <div class="muted">Scale</div>
+          <div id="connPill2" class="pill"><span id="connDot2" class="dot warn"></span><span id="connText2">Connecting...</span></div>
+        </div>
+        <div class="center">
+          <div class="muted">Tag ID</div>
+          <div style="font-weight:700; font-size:22px" id="weighTagId">—</div>
+        </div>
+        <div class="right">
+          <div class="muted">Stable Gross</div>
+          <div class="big-weight" id="weighStable">— kg</div>
+          <div class="muted" id="weighAt">—</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <div class="col">
+          <label>Tare (kg)</label>
+          <input id="inTare" placeholder="0.000" inputmode="decimal">
+        </div>
+        <div class="col">
+          <label>Operator</label>
+          <input id="inOperator" list="dl-operator" placeholder="Optional">
+          <datalist id="dl-operator"></datalist>
+        </div>
+        <div class="col">
+          <label>Manual Gross (kg)</label>
+          <input id="inManualGross" placeholder="Disabled when manual off" inputmode="decimal" disabled>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn" id="btnClearWeigh">Clear</button>
+        <button class="btn primary" id="btnSaveWeigh">Save Weighment</button>
+        <button class="btn warn" id="btnComplete">Complete Lorry</button>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:18px">
+      <div class="card">
+        <h3>Weighments</h3>
+        <table>
+          <thead>
+          <tr>
+            <th>#</th>
+            <th>Tag ID</th>
+            <th class="right">Gross (kg)</th>
+            <th class="right">Tare (kg)</th>
+            <th class="right">Net (kg)</th>
+            <th>At</th>
+            <th class="right">Actions</th>
+          </tr>
+          </thead>
+          <tbody id="tblWeigh"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Totals</h3>
+        <table>
+          <tbody>
+          <tr><td>Tags</td><td class="right" id="totTags">0</td></tr>
+          <tr><td>Gross</td><td class="right" id="totGross">0.000</td></tr>
+          <tr><td>Tare</td><td class="right" id="totTare">0.000</td></tr>
+          <tr><td>Net</td><td class="right" id="totNet">0.000</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal" id="settingsModal">
+  <div class="dialog">
+    <h3>Settings</h3>
+    <div class="row">
+      <div class="col">
+        <label>API Base URL</label>
+        <input id="inApiBase" placeholder="http://localhost:4000">
+      </div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div class="col">
+        <label>Scale ID</label>
+        <input id="inScaleId" placeholder="scale1">
+      </div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div class="col">
+        <label class="switch" title="Auto-use stable by default">
+          <input type="checkbox" id="inAutoUseDefault">
+          <div class="track"><div class="thumb"></div></div>
+          <span>Auto-use stable by default</span>
+        </label>
+      </div>
+    </div>
+    <div class="footer-actions">
+      <button class="btn" id="btnCloseSettings">Close</button>
+      <button class="btn primary" id="btnSaveSettings">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" style="display:none"></div>
+
+<script>
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  const store = {
+    apiBase: localStorage.getItem('apiBase') || `${location.origin}`,
+    scaleId: localStorage.getItem('scaleId') || 'scale1',
+    autoUse: localStorage.getItem('autoUse') === 'true',
+    suggestions: JSON.parse(localStorage.getItem('suggestions') || '{"lorry":[],"estate":[],"driver":[],"operator":[]}'),
+  };
+
+  const els = {
+    navQueue: $('#navQueue'),
+    navWeigh: $('#navWeigh'),
+    navSettings: $('#navSettings'),
+    viewQueue: $('#viewQueue'),
+    viewWeigh: $('#viewWeigh'),
+    settingsModal: $('#settingsModal'),
+    toast: $('#toast'),
+
+    // Queue
+    inLorryNumber: $('#inLorryNumber'),
+    inEstate: $('#inEstate'),
+    inDriverName: $('#inDriverName'),
+    inDriverPhone: $('#inDriverPhone'),
+    btnClearNew: $('#btnClearNew'),
+    btnAddLorry: $('#btnAddLorry'),
+    tblQueue: $('#tblQueue'),
+    dlLorry: $('#dl-lorry'),
+    dlEstate: $('#dl-estate'),
+    dlDriver: $('#dl-driver'),
+
+    // Scale preview
+    connPill: $('#connPill'), connDot: $('#connDot'), connText: $('#connText'),
+    lastTag: $('#lastTag'), lastStable: $('#lastStable'), lastAt: $('#lastAt'),
+    scaleInfo: $('#scaleInfo'),
+
+    // Weigh view
+    weighLorryDetails: $('#weighLorryDetails'),
+    toggleAutoUse: $('#toggleAutoUse'),
+    toggleManualGross: $('#toggleManualGross'),
+    connPill2: $('#connPill2'), connDot2: $('#connDot2'), connText2: $('#connText2'),
+    weighTagId: $('#weighTagId'), weighStable: $('#weighStable'), weighAt: $('#weighAt'),
+    inTare: $('#inTare'), inOperator: $('#inOperator'), inManualGross: $('#inManualGross'),
+    btnClearWeigh: $('#btnClearWeigh'), btnSaveWeigh: $('#btnSaveWeigh'), btnComplete: $('#btnComplete'),
+    tblWeigh: $('#tblWeigh'),
+    totTags: $('#totTags'), totGross: $('#totGross'), totTare: $('#totTare'), totNet: $('#totNet'),
+    dlOperator: $('#dl-operator'),
+
+    // Settings
+    inApiBase: $('#inApiBase'), inScaleId: $('#inScaleId'), inAutoUseDefault: $('#inAutoUseDefault'),
+    btnCloseSettings: $('#btnCloseSettings'), btnSaveSettings: $('#btnSaveSettings'),
+  };
+
+  let currentLorry = null;
+  let sse = null;
+  let lastStable = null;
+  let lastAutoSavedTag = null;
+
+  function toast(msg, type='info', timeout=4000){
+    els.toast.textContent = msg;
+    els.toast.style.display = 'block';
+    els.toast.style.borderColor = type === 'error' ? 'var(--danger)' : type === 'warn' ? 'var(--warn)' : 'var(--border)';
+    setTimeout(()=> els.toast.style.display='none', timeout);
+  }
+
+  function humanTime(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleString();
+  }
+
+  function fmt(n){
+    if(n == null || isNaN(n)) return '0.000';
+    return Number(n).toFixed(3);
+  }
+
+  function setConn(elDot, elText, connected){
+    elDot.className = 'dot ' + (connected ? 'ok' : 'warn');
+    elText.textContent = connected ? 'Connected' : 'Disconnected';
+  }
+
+  function saveSuggestions(){
+    localStorage.setItem('suggestions', JSON.stringify(store.suggestions));
+    refreshDatalists();
+  }
+
+  function addSuggest(key, val){
+    if(!val) return;
+    const arr = store.suggestions[key] || (store.suggestions[key] = []);
+    if(!arr.includes(val)) { arr.unshift(val); if(arr.length>25) arr.pop(); }
+    saveSuggestions();
+  }
+
+  function refreshDatalists(){
+    els.dlLorry.innerHTML = (store.suggestions.lorry||[]).map(v=>`<option value="${v}"></option>`).join('');
+    els.dlEstate.innerHTML = (store.suggestions.estate||[]).map(v=>`<option value="${v}"></option>`).join('');
+    els.dlDriver.innerHTML = (store.suggestions.driver||[]).map(v=>`<option value="${v}"></option>`).join('');
+    els.dlOperator.innerHTML = (store.suggestions.operator||[]).map(v=>`<option value="${v}"></option>`).join('');
+  }
+
+  function setView(view){
+    if(view==='queue'){
+      els.viewQueue.classList.remove('hidden');
+      els.viewWeigh.classList.add('hidden');
+      els.navQueue.classList.add('active');
+      els.navWeigh.classList.remove('active');
+    }else{
+      els.viewQueue.classList.add('hidden');
+      els.viewWeigh.classList.remove('hidden');
+      els.navQueue.classList.remove('active');
+      els.navWeigh.classList.add('active');
+    }
+  }
+
+  async function api(path, opts={}){
+    const res = await fetch(`${store.apiBase}${path}`, {
+      headers: { 'Content-Type': 'application/json' },
+      ...opts,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    if(!res.ok){
+      const js = await res.json().catch(()=> ({}));
+      const err = new Error(js.error || res.statusText);
+      err.status = res.status;
+      err.payload = js;
+      throw err;
+    }
+    return res.json();
+  }
+
+  async function loadQueue(){
+    const [queued, active] = await Promise.all([
+      api('/api/lorries?status=QUEUED'),
+      api('/api/lorries?status=ACTIVE'),
+    ]);
+    const rows = [];
+    function row(l){
+      const totals = l.totals || {tags:0,grossKg:0,tareKg:0,netKg:0};
+      return `
+        <tr>
+          <td><span class="pill">${l.status}</span></td>
+          <td>${l.lorryNumber}</td>
+          <td>${l.estate}</td>
+          <td>${l.driver?.name || ''}</td>
+          <td>${humanTime(l.arrivedAt)}</td>
+          <td>${totals.tags} tags, Net ${fmt(totals.netKg)} kg</td>
+          <td class="right">
+            ${l.status==='QUEUED' ? `<button class="btn primary" data-act="start" data-id="${l._id}">Start</button>` : ''}
+            ${l.status==='ACTIVE' ? `<button class="btn" data-act="weigh" data-id="${l._id}">Weigh</button>` : ''}
+          </td>
+        </tr>`;
+    }
+    active.forEach(l => rows.push(row(l)));
+    queued.forEach(l => rows.push(row(l)));
+    els.tblQueue.innerHTML = rows.join('') || `<tr><td colspan="7" class="center muted">No lorries in queue</td></tr>`;
+
+    els.tblQueue.querySelectorAll('button[data-act]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.getAttribute('data-id');
+        const act = btn.getAttribute('data-act');
+        try{
+          if(act==='start'){
+            await api(`/api/lorries/${id}/start`, { method:'PATCH' });
+            toast('Lorry started', 'info');
+            await loadQueue();
+          }else if(act==='weigh'){
+            await openWeigh(id);
+          }
+        }catch(e){
+          toast(e.message || 'Action failed', 'error');
+        }
+      });
+    });
+  }
+
+  async function openWeigh(id){
+    currentLorry = await api(`/api/lorries/${id}`);
+    els.weighLorryDetails.textContent = `${currentLorry.lorryNumber} • Line: ${currentLorry.estate} • Manager: ${currentLorry.driver?.name || ''}`;
+    setView('weigh');
+    await Promise.all([loadWeighments(), refreshLorry()]);
+    els.inTare.focus();
+  }
+
+  async function refreshLorry(){
+    if(!currentLorry) return;
+    currentLorry = await api(`/api/lorries/${currentLorry._id}`);
+    const t = currentLorry.totals || {};
+    els.totTags.textContent = t.tags || 0;
+    els.totGross.textContent = fmt(t.grossKg || 0);
+    els.totTare.textContent = fmt(t.tareKg || 0);
+    els.totNet.textContent = fmt(t.netKg || 0);
+  }
+
+  async function loadWeighments(){
+    if(!currentLorry) return;
+    const rows = await api(`/api/weighments?lorryId=${currentLorry._id}`);
+    els.tblWeigh.innerHTML = rows.map((w, i)=> `
+      <tr>
+        <td>${i+1}</td>
+        <td>${w.tagId}</td>
+        <td class="right">${fmt(w.grossKg)}</td>
+        <td class="right">${fmt(w.tareKg)}</td>
+        <td class="right">${fmt(w.netKg)}</td>
+        <td>${humanTime(w.at)}</td>
+        <td class="right">
+          <button class="btn" data-edit="${w._id}">Edit</button>
+          <button class="btn danger" data-del="${w._id}">Delete</button>
+        </td>
+      </tr>
+    `).join('') || `<tr><td colspan="7" class="center muted">No weighments yet</td></tr>`;
+
+    els.tblWeigh.querySelectorAll('button[data-del]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.getAttribute('data-del');
+        if(!confirm('Delete this weighment?')) return;
+        try{
+          await api(`/api/weighments/${id}`, { method:'DELETE' });
+          await Promise.all([loadWeighments(), refreshLorry()]);
+        }catch(e){ toast(e.message || 'Delete failed', 'error'); }
+      });
+    });
+    els.tblWeigh.querySelectorAll('button[data-edit]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.getAttribute('data-edit');
+        const gross = prompt('New gross (kg):');
+        if(gross==null) return;
+        const tare = prompt('New tare (kg):');
+        if(tare==null) return;
+        try{
+          await api(`/api/weighments/${id}`, { method:'PUT', body:{ grossKg: Number(gross), tareKg: Number(tare) }});
+          await Promise.all([loadWeighments(), refreshLorry()]);
+          toast('Updated', 'info');
+        }catch(e){ toast(e.message || 'Update failed', 'error'); }
+      });
+    });
+  }
+
+  async function connectSSE(){
+    if(sse) { sse.close(); sse = null; }
+    const url = `${store.apiBase}/api/scales/${encodeURIComponent(store.scaleId)}/stream`;
+    sse = new EventSource(url);
+    sse.onopen = () => {
+      els.scaleInfo.textContent = `SSE connected to ${url}`;
+    };
+    sse.addEventListener('snapshot', (ev)=>{
+      const data = JSON.parse(ev.data);
+      setConn(els.connDot, els.connText, data.connected);
+      setConn(els.connDot2, els.connText2, data.connected);
+      if(data.lastStable){
+        lastStable = data.lastStable;
+        renderStable(lastStable);
+      }
+    });
+    sse.addEventListener('stable', (ev)=>{
+      const data = JSON.parse(ev.data);
+      lastStable = data;
+      renderStable(lastStable);
+      autoSaveIfNeeded(data);
+    });
+    sse.onerror = ()=>{
+      setConn(els.connDot, els.connText, false);
+      setConn(els.connDot2, els.connText2, false);
+    };
+  }
+
+  function renderStable(st){
+    if(!st) return;
+    els.lastStable.textContent = `${fmt(st.grossKg)} kg`;
+    els.lastAt.textContent = humanTime(st.at);
+    els.lastTag.textContent = st.tagId || '—';
+
+    els.weighStable.textContent = `${fmt(st.grossKg)} kg`;
+    els.weighAt.textContent = humanTime(st.at);
+    els.weighTagId.textContent = st.tagId || '—';
+  }
+
+  async function autoSaveIfNeeded(st){
+    if(!els.toggleAutoUse.checked) return;
+    if(!currentLorry) return;
+    if(!st || !st.tagId) return;
+    if(lastAutoSavedTag === st.tagId) return; // avoid duplicate
+    try{
+      const tare = parseFloat(els.inTare.value || '0') || 0;
+      const operator = (els.inOperator.value || '').trim();
+      const body = { lorryId: currentLorry._id, tareKg: tare, operator };
+      if(els.toggleManualGross.checked){
+        const mg = parseFloat(els.inManualGross.value || '0');
+        if(!isFinite(mg) || mg < 0){ toast('Invalid manual gross', 'warn'); return; }
+        body.grossKg = mg;
+      }
+      await api('/api/weighments', { method:'POST', body });
+      lastAutoSavedTag = st.tagId;
+      addSuggest('operator', operator);
+      els.inTare.value = '';
+      els.inOperator.value = '';
+      els.inTare.focus();
+      await Promise.all([loadWeighments(), refreshLorry()]);
+    }catch(e){
+      // Conflict likely duplicate tag
+      if(e.status === 409){
+        lastAutoSavedTag = st.tagId; // suppress retry loop
+        toast('Duplicate tag ID for this lorry', 'warn');
+      }else{
+        toast(e.message || 'Auto-save failed', 'error');
+      }
+    }
+  }
+
+  async function saveWeighmentManual(){
+    if(!currentLorry) { toast('Select an ACTIVE lorry first', 'warn'); return; }
+    try{
+      const tare = parseFloat(els.inTare.value || '0') || 0;
+      const operator = (els.inOperator.value || '').trim();
+      const body = { lorryId: currentLorry._id, tareKg: tare, operator };
+      if(els.toggleManualGross.checked){
+        const mg = parseFloat(els.inManualGross.value || '');
+        if(!isFinite(mg) || mg < 0) throw new Error('Invalid manual gross');
+        body.grossKg = mg;
+      }
+      await api('/api/weighments', { method:'POST', body });
+      addSuggest('operator', operator);
+      els.inTare.value = '';
+      els.inOperator.value = '';
+      els.inManualGross.value = '';
+      els.inTare.focus();
+      await Promise.all([loadWeighments(), refreshLorry()]);
+    }catch(e){
+      toast(e.message || 'Save failed', 'error');
+    }
+  }
+
+  async function completeLorry(){
+    if(!currentLorry) return;
+    if(!confirm('Complete this lorry and finalize totals?')) return;
+    try{
+      await api(`/api/lorries/${currentLorry._id}/complete`, { method:'PATCH' });
+      toast('Lorry completed', 'info');
+      currentLorry = null;
+      setView('queue');
+      await loadQueue();
+    }catch(e){ toast(e.message || 'Complete failed', 'error'); }
+  }
+
+  function initUI(){
+    // Navigation
+    els.navQueue.addEventListener('click', ()=> setView('queue'));
+    els.navWeigh.addEventListener('click', ()=> setView('weigh'));
+    els.navSettings.addEventListener('click', ()=> {
+      els.inApiBase.value = store.apiBase;
+      els.inScaleId.value = store.scaleId;
+      els.inAutoUseDefault.checked = store.autoUse;
+      els.settingsModal.classList.add('show');
+    });
+
+    // Settings modal
+    els.btnCloseSettings.addEventListener('click', ()=> els.settingsModal.classList.remove('show'));
+    els.btnSaveSettings.addEventListener('click', ()=>{
+      store.apiBase = els.inApiBase.value.trim() || store.apiBase;
+      store.scaleId = els.inScaleId.value.trim() || store.scaleId;
+      store.autoUse = !!els.inAutoUseDefault.checked;
+      localStorage.setItem('apiBase', store.apiBase);
+      localStorage.setItem('scaleId', store.scaleId);
+      localStorage.setItem('autoUse', String(store.autoUse));
+      els.settingsModal.classList.remove('show');
+      connectSSE();
+    });
+
+    // Queue add
+    els.btnAddLorry.addEventListener('click', async ()=>{
+      const lorryNumber = els.inLorryNumber.value.trim();
+      const estate = els.inEstate.value.trim();
+      const driverName = els.inDriverName.value.trim();
+      const driverPhone = els.inDriverPhone.value.trim();
+      if(!lorryNumber || !estate || !driverName){
+        toast('Lorry Number, Line, and Line Manager are required', 'warn');
+        return;
+      }
+      try{
+        const l = await api('/api/lorries', { method:'POST', body:{
+          lorryNumber, estate, driver: { name: driverName, phone: driverPhone || undefined }
+        }});
+        addSuggest('lorry', lorryNumber);
+        addSuggest('estate', estate);
+        addSuggest('driver', driverName);
+        els.inLorryNumber.value = '';
+        els.inEstate.value = '';
+        els.inDriverName.value = '';
+        els.inDriverPhone.value = '';
+        await loadQueue();
+      }catch(e){ toast(e.message || 'Add failed', 'error'); }
+    });
+    els.btnClearNew.addEventListener('click', ()=>{
+      els.inLorryNumber.value = '';
+      els.inEstate.value = '';
+      els.inDriverName.value = '';
+      els.inDriverPhone.value = '';
+    });
+
+    // Weigh view toggles
+    els.toggleAutoUse.checked = store.autoUse;
+    els.toggleAutoUse.addEventListener('change', ()=>{
+      store.autoUse = els.toggleAutoUse.checked;
+      localStorage.setItem('autoUse', String(store.autoUse));
+    });
+    els.toggleManualGross.addEventListener('change', ()=>{
+      const en = els.toggleManualGross.checked;
+      els.inManualGross.disabled = !en;
+      if(!en){ els.inManualGross.value = ''; }
+    });
+
+    // Weigh actions
+    els.btnSaveWeigh.addEventListener('click', saveWeighmentManual);
+    els.btnClearWeigh.addEventListener('click', ()=>{
+      els.inTare.value = '';
+      els.inOperator.value = '';
+      els.inManualGross.value = '';
+      els.inTare.focus();
+    });
+    els.btnComplete.addEventListener('click', completeLorry);
+
+    refreshDatalists();
+  }
+
+  // Initial load
+  (async function bootstrap(){
+    initUI();
+    setView('queue');
+    connectSSE();
+    await loadQueue();
+  })();
+</script>
+</body>
+</html>
