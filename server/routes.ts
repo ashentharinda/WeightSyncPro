@@ -77,7 +77,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log activity
       await storage.createActivity({
         type: 'tare_config',
-        message: `Daily tare configuration saved: ${config.batchId} (${config.tareWeight}kg)`,
+        message: `Daily tare configuration saved: ${config//.batchId
+
+        } 
+        (${config.tareWeight}kg)`,
         status: 'success',
         metadata: { configId: config.id, date: config.date }
       });

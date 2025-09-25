@@ -20,9 +20,9 @@ export class MQTTClient extends EventEmitter {
   constructor(config: any) {
     super();
     this.config = {
-      host: config.host || 'localhost',
+      host: config.host || 'test.mosquitto.org',
       port: config.port || 1883,
-      weightTopic: config.weightTopic || '/plc/weight/data',
+      weightTopic: config.weightTopic || 'iot-2/type/mt/id/1b6cecae-a48c-41e3-83fa-259a43510968/evt/lastwill/fmt/json',
       tagTopic: config.tagTopic || '/plc/tag/id',
       qos: config.qos || 1
     };
@@ -96,8 +96,8 @@ export class MQTTClient extends EventEmitter {
 }
 
 export const mqttClient = new MQTTClient({
-  host: process.env.MQTT_HOST || 'localhost',
+  host: process.env.MQTT_HOST || 'test.mosquitto.org',
   port: parseInt(process.env.MQTT_PORT || '1883'),
-  weightTopic: process.env.MQTT_WEIGHT_TOPIC || '/plc/weight/data',
+  weightTopic: process.env.MQTT_WEIGHT_TOPIC || 'iot-2/type/mt/id/1b6cecae-a48c-41e3-83fa-259a43510968/evt/lastwill/fmt/json',
   tagTopic: process.env.MQTT_TAG_TOPIC || '/plc/tag/id'
 });

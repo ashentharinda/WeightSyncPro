@@ -21,7 +21,7 @@ export class SerialClient extends EventEmitter {
   constructor(config: any) {
     super();
     this.config = {
-      port: config.port || 'COM1',
+      port: config.port || 'COM3',
       baudRate: config.baudRate || 9600,
       dataBits: config.dataBits || 8,
       stopBits: config.stopBits || 1,
