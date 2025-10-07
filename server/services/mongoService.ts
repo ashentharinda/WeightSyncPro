@@ -20,7 +20,7 @@ class MongoService {
     }
   }
 
-  getCollection(collectionName: string) {
+ getCollection(collectionName: string) {
     return this.client.db(this.dbName).collection(collectionName);
   }
 

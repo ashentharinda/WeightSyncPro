@@ -1,9 +1,10 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #090909;
+  --background: #09831f;
   --foreground: #ebebeb;
   --card: #101011;
   --card-foreground: 0 0% 100%;

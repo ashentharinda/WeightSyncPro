@@ -54,7 +54,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-gradient-to-r from-accent to-primary shadow-lg shadow-accent/25"></div>
             <div>
-              <h1 className="text-lg font-bold text-foreground" data-testid="app-title">Tea Factory Weighing</h1>
+              <h1 className="text-lg font-bold text-foreground" data-testid="app-title">New Hopewell Tea Factory Weighing</h1>
               <p className="text-xs text-muted-foreground">Enhanced PLC & API Integration</p>
             </div>
           </div>
