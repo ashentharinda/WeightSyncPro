@@ -12,7 +12,6 @@ export const users = pgTable("users", {
 export const tareConfigurations = pgTable("tare_configurations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   date: text("date").notNull(),
-  batchId: text("batch_id").notNull(),
   tareWeight: real("tare_weight").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });

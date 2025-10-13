@@ -13,10 +13,11 @@ export function useWebSocket() {
   const messageHandlers = useRef<Map<string, (data: any) => void>>(new Map());
 
   useEffect(() => {
+    // Use Socket.IO instead of raw WebSocket
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.hostname;
     const port = window.location.port || (protocol === "wss:" ? "443" : "80");
-    const wsUrl = `${protocol}//${host}:${port}/ws`;
+    const wsUrl = `${protocol}//${host}:${port}`;
 
     ws.current = new WebSocket(wsUrl);
 

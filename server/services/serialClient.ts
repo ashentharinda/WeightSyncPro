@@ -54,7 +54,7 @@ export class SerialClient extends EventEmitter {
   }
 
   private simulateWeightReading(): void {
-    // Generate realistic weight readings
+    // Generate realistic weight readings from serial scale
     const baseWeight = 12.0;
     const variation = (Math.random() - 0.5) * 0.1; // ±0.05kg variation
     const weight = Math.round((baseWeight + variation) * 1000) / 1000;
@@ -66,6 +66,7 @@ export class SerialClient extends EventEmitter {
       timestamp: new Date()
     };
     
+    console.log(`Serial weight reading: ${weight}kg (stable: ${reading.stable})`);
     this.emit('data', reading);
   }
 
@@ -91,7 +92,7 @@ export class SerialClient extends EventEmitter {
 }
 
 export const serialClient = new SerialClient({
-  port: process.env.SERIAL_PORT || 'COM1',
+  port: process.env.SERIAL_PORT || 'COM3',
   baudRate: parseInt(process.env.SERIAL_BAUD_RATE || '9600'),
   dataBits: parseInt(process.env.SERIAL_DATA_BITS || '8'),
   stopBits: parseInt(process.env.SERIAL_STOP_BITS || '1'),

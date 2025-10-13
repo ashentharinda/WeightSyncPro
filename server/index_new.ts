@@ -1,7 +1,7 @@
 // index.ts — CORRECTED VERSION
 
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes, initializeServicesWithSocketIO } from "./routes";
+import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { mongoService } from './services/mongoService'; // ← Fix path if needed
 import { mqttClient } from './services/mqttClient';     // ← Fix path if needed
@@ -83,10 +83,24 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
         cors: { origin: "*" }
       });
 
-      // Initialize services with Socket.IO
-      await initializeServicesWithSocketIO(io);
+      //  LISTEN TO MQTT → SAVE TO DB + EMIT VIA WEBSOCKET
+      mqttClient.on('weight', async (data) => {
+        try {
+          const collection = mongoService.getCollection('weight_readings');
+          const record = {
+            weight: data.weight,
+            unit: 'kg',
+            timestamp: new Date(),
+          };
+          const result = await collection.insertOne(record);
+          console.log('💾 Saved to MongoDB:', result.insertedId, record);
 
-      // MQTT and Serial data handling is now managed in routes.ts via initializeServicesWithSocketIO
+          //  PUSH LIVE TO FRONTEND
+          io.emit('scale:weight', { weight: data.weight });
+        } catch (err) {
+          console.error('❌ Failed to save weight:', err);
+        }
+      });
 
       // ✅ GRACEFUL SHUTDOWN
       process.on('SIGINT', async () => {

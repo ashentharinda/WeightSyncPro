@@ -17,7 +17,6 @@ export function QueueManagement() {
   // Form states
   const [tareForm, setTareForm] = useState({
     date: new Date().toISOString().split('T')[0],
-    batchId: '',
     tareWeight: ''
   });
 
@@ -44,7 +43,6 @@ export function QueueManagement() {
     mutationFn: async (data: typeof tareForm) => {
       const response = await apiRequest('POST', '/api/tare-config', {
         date: data.date,
-        batchId: data.batchId,
         tareWeight: parseFloat(data.tareWeight)
       });
       return response.json();
@@ -55,7 +53,7 @@ export function QueueManagement() {
         description: "Daily tare configuration saved successfully"
       });
       queryClient.invalidateQueries({ queryKey: ['/api/tare-config'] });
-      setTareForm(prev => ({ ...prev, batchId: '', tareWeight: '' }));
+      setTareForm(prev => ({ ...prev, tareWeight: '' }));
     },
     onError: () => {
       toast({
@@ -127,7 +125,7 @@ export function QueueManagement() {
 
   const handleTareSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tareForm.batchId || !tareForm.tareWeight) return;
+    if (!tareForm.tareWeight) return;
     createTareMutation.mutate(tareForm);
   };
 
@@ -169,7 +167,7 @@ export function QueueManagement() {
             Configure tare weight once per day for all bags in this batch
           </p>
           
-          <form onSubmit={handleTareSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <form onSubmit={handleTareSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="tareDate" className="text-xs text-muted-foreground">Date</Label>
               <Input
@@ -179,18 +177,6 @@ export function QueueManagement() {
                 onChange={(e) => setTareForm(prev => ({ ...prev, date: e.target.value }))}
                 className="mt-2"
                 data-testid="input-tare-date"
-              />
-            </div>
-            <div>
-              <Label htmlFor="batchId" className="text-xs text-muted-foreground">Batch ID</Label>
-              <Input
-                id="batchId"
-                type="text"
-                placeholder="BATCH-001"
-                value={tareForm.batchId}
-                onChange={(e) => setTareForm(prev => ({ ...prev, batchId: e.target.value }))}
-                className="mt-2"
-                data-testid="input-batch-id"
               />
             </div>
             <div>
@@ -225,9 +211,6 @@ export function QueueManagement() {
                 <div>
                   <span className="text-sm font-medium" data-testid="text-current-date">
                     Today: {currentTare.date}
-                  </span>
-                  <span className="ml-4 text-sm text-muted-foreground" data-testid="text-current-batch">
-                    Batch: {currentTare.batchId}
                   </span>
                 </div>
                 <div className="text-lg font-bold text-primary" data-testid="text-current-weight">

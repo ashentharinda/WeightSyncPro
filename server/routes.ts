@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer, WebSocket } from "ws";
+import { Server as SocketIOServer } from 'socket.io';
 import { storage } from "./storage";
 import { 
   insertTareConfigSchema,
@@ -15,46 +15,13 @@ import { serialClient } from "./services/serialClient";
 import { apiClient } from "./services/apiClient";
 import { weightValidator } from "./services/weightValidator";
 
-interface WebSocketMessage {
-  type: string;
-  data: any;
-  timestamp: Date;
-}
-
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express, io: SocketIOServer | null): Promise<Server> {
   const httpServer = createServer(app);
 
-  // Initialize WebSocket server
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
-  const clients = new Set<WebSocket>();
-
-  // WebSocket connection handler
-  wss.on('connection', (ws: WebSocket) => {
-    clients.add(ws);
-    console.log('WebSocket client connected');
-
-    ws.on('close', () => {
-      clients.delete(ws);
-      console.log('WebSocket client disconnected');
-    });
-
-    ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
-    });
-  });
-
-  // Broadcast to all connected clients
-  function broadcast(message: WebSocketMessage) {
-    const data = JSON.stringify(message);
-    clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(data);
-      }
-    });
+  // Initialize hardware services only if Socket.IO is available
+  if (io) {
+    await initializeServices(io);
   }
-
-  // Initialize hardware services
-  await initializeServices(broadcast);
 
   // API Routes
 
@@ -77,17 +44,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log activity
       await storage.createActivity({
         type: 'tare_config',
-        message: `Daily tare configuration saved: ${config//.batchId
-
-        } 
-        (${config.tareWeight}kg)`,
+        message: `Daily tare configuration saved for ${config.date} (${config.tareWeight}kg)`,
         status: 'success',
         metadata: { configId: config.id, date: config.date }
       });
 
       // Broadcast update
-      broadcast({
-        type: 'tare_config_updated',
+      io?.emit('tare_config_updated', {
         data: config,
         timestamp: new Date()
       });
@@ -123,8 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Broadcast update
-      broadcast({
-        type: 'lorry_queue_updated',
+      io?.emit('lorry_queue_updated', {
         data: await storage.getLorryQueue(),
         timestamp: new Date()
       });
@@ -155,8 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Broadcast update
-      broadcast({
-        type: 'lorry_status_updated',
+      io?.emit('lorry_status_updated', {
         data: { lorryId: id, status, totalBags },
         timestamp: new Date()
       });
@@ -177,8 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Broadcast update
-      broadcast({
-        type: 'lorry_removed',
+      io?.emit('lorry_removed', {
         data: { lorryId: id },
         timestamp: new Date()
       });
@@ -245,8 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Broadcast update
-      broadcast({
-        type: 'weighment_created',
+      io?.emit('weighment_created', {
         data: weighment,
         timestamp: new Date()
       });
@@ -334,6 +293,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
+// Export function to initialize services after Socket.IO is created
+export async function initializeServicesWithSocketIO(io: SocketIOServer) {
+  await initializeServices(io);
+}
+
 let currentWeightReading: WeightReading = {
   plcWeight: undefined,
   serialWeight: undefined,
@@ -344,12 +308,11 @@ function getCurrentWeightReading(): WeightReading {
   return { ...currentWeightReading };
 }
 
-async function initializeServices(broadcast: (message: WebSocketMessage) => void) {
+async function initializeServices(io: SocketIOServer) {
   // Initialize MQTT client
   mqttClient.on('connect', () => {
     console.log('MQTT client connected');
-    broadcast({
-      type: 'mqtt_status',
+    io.emit('mqtt_status', {
       data: { connected: true },
       timestamp: new Date()
     });
@@ -360,17 +323,8 @@ async function initializeServices(broadcast: (message: WebSocketMessage) => void
       currentWeightReading.plcWeight = message.payload.weight;
       currentWeightReading.timestamp = new Date();
       
-      broadcast({
-        type: 'weight_update',
+      io.emit('weight_update', {
         data: { source: 'plc', weight: message.payload.weight },
-        timestamp: new Date()
-      });
-    } else if (message.topic.includes('tag')) {
-      currentWeightReading.tagId = message.payload.tagId;
-      
-      broadcast({
-        type: 'tag_update',
-        data: { tagId: message.payload.tagId },
         timestamp: new Date()
       });
     }
@@ -378,8 +332,7 @@ async function initializeServices(broadcast: (message: WebSocketMessage) => void
 
   mqttClient.on('error', (error) => {
     console.error('MQTT error:', error);
-    broadcast({
-      type: 'mqtt_status',
+    io.emit('mqtt_status', {
       data: { connected: false, error: error.message },
       timestamp: new Date()
     });
@@ -388,8 +341,7 @@ async function initializeServices(broadcast: (message: WebSocketMessage) => void
   // Initialize Serial client
   serialClient.on('connect', () => {
     console.log('Serial client connected');
-    broadcast({
-      type: 'serial_status',
+    io.emit('serial_status', {
       data: { connected: true },
       timestamp: new Date()
     });
@@ -400,8 +352,7 @@ async function initializeServices(broadcast: (message: WebSocketMessage) => void
       currentWeightReading.serialWeight = reading.weight;
       currentWeightReading.timestamp = new Date();
       
-      broadcast({
-        type: 'weight_update',
+      io.emit('weight_update', {
         data: { source: 'serial', weight: reading.weight, stable: reading.stable },
         timestamp: new Date()
       });
@@ -410,8 +361,7 @@ async function initializeServices(broadcast: (message: WebSocketMessage) => void
 
   serialClient.on('error', (error) => {
     console.error('Serial error:', error);
-    broadcast({
-      type: 'serial_status',
+    io.emit('serial_status', {
       data: { connected: false, error: error.message },
       timestamp: new Date()
     });
@@ -419,16 +369,14 @@ async function initializeServices(broadcast: (message: WebSocketMessage) => void
 
   // Initialize API client
   apiClient.on('connect', () => {
-    broadcast({
-      type: 'api_status',
+    io.emit('api_status', {
       data: { connected: true },
       timestamp: new Date()
     });
   });
 
   apiClient.on('sync_success', (event) => {
-    broadcast({
-      type: 'api_sync',
+    io.emit('api_sync', {
       data: { success: true, data: event.data },
       timestamp: new Date()
     });
