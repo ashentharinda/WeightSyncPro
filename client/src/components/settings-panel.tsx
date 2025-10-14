@@ -31,7 +31,6 @@ interface SettingsCategory {
     host: string;
     port: number;
     weightTopic: string;
-    tagTopic: string;
     qos: number;
   };
   serial: {
@@ -64,7 +63,6 @@ export function SettingsPanel() {
       host: "localhost",
       port: 1883,
       weightTopic: "/plc/weight/data",
-      tagTopic: "/plc/tag/id",
       qos: 1
     },
     serial: {
@@ -383,17 +381,6 @@ export function SettingsPanel() {
                   onChange={(e) => updateSetting('mqtt', 'weightTopic', e.target.value)}
                   className="mt-2"
                   data-testid="input-weight-topic"
-                />
-              </div>
-              <div>
-                <Label htmlFor="tagTopic" className="text-xs text-muted-foreground">Tag Topic</Label>
-                <Input
-                  id="tagTopic"
-                  type="text"
-                  value={settings.mqtt.tagTopic}
-                  onChange={(e) => updateSetting('mqtt', 'tagTopic', e.target.value)}
-                  className="mt-2"
-                  data-testid="input-tag-topic"
                 />
               </div>
               <Button 
