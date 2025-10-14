@@ -252,6 +252,21 @@ export async function registerRoutes(app: Express, io: SocketIOServer | null): P
       // Update service configurations
       updateServiceConfigurations(category, req.body);
 
+      // Auto-reconnect services on live config change
+      try {
+        if (category === 'mqtt') {
+          // soft reconnect MQTT
+          await mqttClient.reconnect?.();
+        }
+        if (category === 'serial') {
+          // soft reconnect Serial
+          await serialClient.disconnect();
+          await serialClient.connect();
+        }
+      } catch (e) {
+        console.error('Live reconfigure failed:', e);
+      }
+
       res.json(settings);
     } catch (error) {
       res.status(500).json({ error: 'Failed to save settings' });

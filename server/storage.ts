@@ -68,6 +68,7 @@ export class MemStorage implements IStorage {
     this.weighments = new Map();
     this.systemSettings = new Map();
     this.systemActivities = new Map();
+    this.loadSettingsFromDisk();
   }
 
   // Users
@@ -259,6 +260,7 @@ export class MemStorage implements IStorage {
         updatedAt: new Date()
       };
       this.systemSettings.set(existing.id, updated);
+      await this.saveSettingsToDisk();
       return updated;
     } else {
       const id = randomUUID();
@@ -269,6 +271,7 @@ export class MemStorage implements IStorage {
         updatedAt: new Date()
       };
       this.systemSettings.set(id, newSettings);
+      await this.saveSettingsToDisk();
       return newSettings;
     }
   }
@@ -290,6 +293,38 @@ export class MemStorage implements IStorage {
     };
     this.systemActivities.set(id, newActivity);
     return newActivity;
+  }
+
+  private settingsFilePath(): string {
+    return process.env.SETTINGS_PATH || './.data/settings.json';
+  }
+
+  private async loadSettingsFromDisk(): Promise<void> {
+    try {
+      const fs = await import('fs');
+      const path = this.settingsFilePath();
+      if (!fs.existsSync(path)) return;
+      const raw = await fs.promises.readFile(path, 'utf-8');
+      const arr: SystemSettings[] = JSON.parse(raw);
+      for (const s of arr) {
+        this.systemSettings.set(s.id, { ...s, updatedAt: new Date(s.updatedAt as any) });
+      }
+    } catch {}
+  }
+
+  private async saveSettingsToDisk(): Promise<void> {
+    try {
+      const fs = await import('fs');
+      const path = this.settingsFilePath();
+      const dir = path.split('/').slice(0, -1).join('/');
+      if (dir && !fs.existsSync(dir)) {
+        await fs.promises.mkdir(dir, { recursive: true });
+      }
+      const out = JSON.stringify(Array.from(this.systemSettings.values()), null, 2);
+      await fs.promises.writeFile(path, out, 'utf-8');
+    } catch (e) {
+      console.error('Failed to persist settings:', e);
+    }
   }
 }
 

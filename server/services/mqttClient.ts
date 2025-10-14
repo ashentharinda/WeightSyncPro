@@ -15,6 +15,7 @@ export class MQTTClient extends EventEmitter {
     weightTopic: string;
     qos: number;
   };
+  private simulateTimer?: NodeJS.Timeout;
 
   constructor(config: any) {
     super();
@@ -55,6 +56,10 @@ export class MQTTClient extends EventEmitter {
   }
 
   async disconnect(): Promise<void> {
+    if (this.simulateTimer) {
+      clearInterval(this.simulateTimer);
+      this.simulateTimer = undefined;
+    }
     this.connected = false;
     this.emit('disconnect');
   }
@@ -79,7 +84,10 @@ export class MQTTClient extends EventEmitter {
 
   private startWeightSimulation(): void {
     // Simulate PLC weight data every 2 seconds
-    setInterval(() => {
+    if (this.simulateTimer) {
+      clearInterval(this.simulateTimer);
+    }
+    this.simulateTimer = setInterval(() => {
       if (this.connected) {
         // Simulate realistic weight readings from PLC
         const baseWeight = 15.5;
@@ -103,6 +111,11 @@ export class MQTTClient extends EventEmitter {
 
   updateConfig(newConfig: any): void {
     this.config = { ...this.config, ...newConfig };
+  }
+
+  async reconnect(): Promise<void> {
+    if (this.connected) await this.disconnect();
+    await this.connect();
   }
 }
 
