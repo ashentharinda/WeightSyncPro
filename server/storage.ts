@@ -161,7 +161,10 @@ export class MemStorage implements IStorage {
       ...lorry, 
       id, 
       status: lorry.status || "waiting",
-      createdAt: new Date() 
+      createdAt: new Date(),
+      phone: lorry.phone ?? null,
+      tareConfigId: lorry.tareConfigId ?? null,
+      totalBags: lorry.totalBags ?? null
     };
     this.lorryQueue.set(id, newLorry);
     return newLorry;

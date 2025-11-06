@@ -142,7 +142,16 @@ export function SettingsPanel() {
         title: "Success",
         description: `${variables.category.toUpperCase()} settings saved successfully`
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/settings/${variables.category}`] });
+      // Invalidate and refetch the specific category's settings
+      queryClient.invalidateQueries({ 
+        queryKey: [`/api/settings/${variables.category}`],
+        exact: true
+      });
+      // Also refetch immediately to update UI
+      queryClient.refetchQueries({ 
+        queryKey: [`/api/settings/${variables.category}`],
+        exact: true
+      });
     },
     onError: (_, variables) => {
       toast({

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "852b71dc-21c8-4142-92ec-7eaa117b222e",
+    "category": "mqtt",
+    "settings": {
+      "host": "localhost",
+      "port": 1883,
+      "weightTopic": "iot-2/type/cMT-SVR-100 _ 102/id/SUPERV-SBPW/evt/topic 1/fmt/json",
+      "qos": 1
+    },
+    "updatedAt": "2025-11-06T05:52:59.573Z"
+  },
+  {
+    "id": "3d2c3b66-fc7a-47ba-805e-2b05c36bb291",
+    "category": "serial",
+    "settings": {
+      "port": "COM3",
+      "baudRate": 9600,
+      "dataBits": 8,
+      "stopBits": 1,
+      "parity": "none"
+    },
+    "updatedAt": "2025-11-06T05:52:59.574Z"
+  },
+  {
+    "id": "dc00bd04-6016-4c60-8a95-6adb0be2bfb5",
+    "category": "api",
+    "settings": {
+      "endpoint": "",
+      "authMethod": "bearer",
+      "apiKey": "",
+      "syncInterval": 30,
+      "retryAttempts": 3
+    },
+    "updatedAt": "2025-11-06T05:52:59.572Z"
+  }
+]  {
+    "id": "dbaf0e25-c3fe-43f6-a634-aa1eb370bde2",
+    "category": "tolerance",
+    "settings": {
+      "toleranceRange": 0.05,
+      "weightSourcePriority": "plc",
+      "validationAction": "log"
+    },
+    "updatedAt": "2025-11-06T05:52:59.576Z"
+  }
+]

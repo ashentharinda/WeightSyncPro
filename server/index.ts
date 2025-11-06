@@ -72,6 +72,21 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       serveStatic(app);
     }
 
+    // Handle server errors (e.g., port already in use)
+    server.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use. Please:`);
+        console.error(`   1. Stop the process using port ${PORT}`);
+        console.error(`   2. Or change the PORT environment variable`);
+        console.error(`\n   To find and kill the process:`);
+        console.error(`   Windows: netstat -ano | findstr :${PORT}`);
+        console.error(`   Then: taskkill /PID <PID> /F`);
+      } else {
+        console.error('❌ Server error:', err);
+      }
+      process.exit(1);
+    });
+
     server.listen(PORT, '0.0.0.0', async () => {
       console.log(`🚀 Server running at http://localhost:${PORT}/`);
 

@@ -99,12 +99,13 @@ export function WeighingInterface() {
 
     if (!plcWeight || !serialWeight) {
       const finalWeight = plcWeight || serialWeight || 0;
+      const weightSource: "plc" | "serial" = plcWeight ? "plc" : "serial";
       return {
         difference: 0,
         tolerance: 0.05,
         status: "good" as const,
         finalWeight,
-        weightSource: (plcWeight ? "plc" : "serial") as const
+        weightSource
       };
     }
 
