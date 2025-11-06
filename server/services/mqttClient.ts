@@ -55,13 +55,8 @@ export class MQTTClient extends EventEmitter {
         connectTimeout: 10000,
       };
 
-      if (this.config.username) {
-        options.username = this.config.username;
-      }
-      if (this.config.password) {
-        options.password = this.config.password;
-      }
-
+      if (this.config.username) options.username = this.config.username;
+      if (this.config.password) options.password = this.config.password;
       this.mqttClient = connect(brokerUrl, options);
 
       this.mqttClient.on("connect", () => {

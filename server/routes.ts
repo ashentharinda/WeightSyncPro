@@ -344,26 +344,28 @@ async function initializeServices(io: SocketIOServer) {
   });
 
   mqttClient.on("message", (message) => {
-    // Extract weight from message payload (handles various formats)
-    const weight =
-      message.payload?.weight ||
-      message.payload?.value ||
-      message.payload?.data;
+    if (message.topic === "iot-2/Value3") {
+      // Extract weight from message payload (handles various formats)
+      const weight =
+        message.payload?.weight ||
+        message.payload?.value ||
+        message.payload?.data;
 
-    if (weight !== null && weight !== undefined) {
-      currentWeightReading.plcWeight = weight;
-      currentWeightReading.timestamp = new Date();
+      if (weight !== null && weight !== undefined) {
+        currentWeightReading.plcWeight = weight;
+        currentWeightReading.timestamp = new Date();
 
-      io.emit("weight_update", {
-        data: { source: "plc", weight: weight },
-        timestamp: new Date(),
-      });
-    } else {
-      // Log if we received a message but couldn't extract weight
-      console.log(
-        `MQTT message on ${message.topic} but no weight data found:`,
-        message.payload
-      );
+        io.emit("weight_update", {
+          data: { source: "plc", weight: weight },
+          timestamp: new Date(),
+        });
+      } else {
+        // Log if we received a message but couldn't extract weight
+        console.log(
+          `MQTT message on ${message.topic} but no weight data found:`,
+          message.payload
+        );
+      }
     }
   });
 
